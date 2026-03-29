@@ -4,26 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chef Mohammed Isefan | Abajamal</title>
-    <meta name="description" content="Chef Mohammed Isefan (Abajamal) - Professional kitchen chef based in Tel Aviv. Father of Jamal.">
+    <meta name="description" content="Chef Mohammed Isefan (Abajamal) - Professional kitchen chef in Tel Aviv. Bookings, catering, private dining.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127860;</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- Grain overlay for Nature Distilled texture -->
+    <div class="grain" aria-hidden="true"></div>
 
     <!-- Nav -->
     <nav class="nav" id="nav">
         <div class="nav-inner">
             <a href="#" class="nav-brand">abajamal<span>.</span></a>
             <div class="nav-links" id="navLinks">
-                <a href="#about">About</a>
-                <a href="#gallery">Gallery</a>
+                <a href="#story">Story</a>
+                <a href="#kitchen">Kitchen</a>
                 <a href="#jimmy">Jimmy</a>
                 <a href="#game">Game</a>
                 <a href="#booking">Book</a>
-                <a href="#contact">Contact</a>
                 <a href="https://www.instagram.com/abajamall" target="_blank" rel="noopener noreferrer" class="nav-ig">@abajamall</a>
             </div>
             <button type="button" class="nav-burger" id="navBurger" aria-label="Menu">
@@ -32,47 +34,52 @@
         </div>
     </nav>
 
-    <!-- Hero -->
+    <!-- Hero — Full bleed with photo -->
     <header class="hero" id="hero">
-        <div class="hero-img">
-            <img src="assets/okyanki-photos/WhatsApp Image 2026-03-29 at 12.20.50 AM.jpeg" alt="Chef Mohammed Isefan">
+        <div class="hero-photo">
+            <img src="assets/okyanki-photos/WhatsApp Image 2026-03-29 at 12.20.50 AM.jpeg" alt="Chef Mohammed Isefan" loading="eager">
+            <div class="hero-photo-overlay"></div>
         </div>
-        <div class="hero-content">
-            <p class="hero-tag">Professional Chef</p>
-            <h1>Mohammed<br><span>Isefan</span></h1>
-            <p class="hero-sub">Abajamal &mdash; Tel Aviv</p>
-            <!-- OKYANKI hidden: 7 dots, each titled with a letter -->
-            <div class="hero-dots">
+        <div class="hero-body">
+            <span class="hero-chip anim-in">Professional Chef &mdash; Tel Aviv</span>
+            <h1 class="anim-in d1">Mohammed<br><span class="gold">Isefan</span></h1>
+            <p class="hero-aka anim-in d2">Abajamal</p>
+            <!-- OKYANKI secret: 7 dots -->
+            <div class="hero-dots anim-in d3" aria-label="decorative">
                 <i title="O"></i><i title="K"></i><i title="Y"></i><i title="A"></i><i title="N"></i><i title="K"></i><i title="I"></i>
             </div>
-            <div class="hero-actions">
-                <a href="https://www.instagram.com/abajamall" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            <div class="hero-btns anim-in d4">
+                <a href="https://www.instagram.com/abajamall" target="_blank" rel="noopener noreferrer" class="btn btn-fill">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12s.014 3.668.072 4.948c.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24s3.668-.014 4.948-.072c4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
                     Follow @abajamall
                 </a>
-                <a href="https://wa.me/972527726892" target="_blank" rel="noopener noreferrer" class="btn btn-outline">Message Me</a>
+                <a href="https://wa.me/972527726892" target="_blank" rel="noopener noreferrer" class="btn btn-ghost">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    WhatsApp
+                </a>
             </div>
         </div>
-        <!-- Secret watermark -->
         <div class="hero-watermark" aria-hidden="true">OKYANKI</div>
+        <div class="hero-scroll-hint" aria-hidden="true">
+            <span>Scroll</span>
+            <div class="scroll-line"></div>
+        </div>
     </header>
 
-    <!-- About -->
-    <section class="about" id="about">
+    <!-- Story / About -->
+    <section class="story" id="story">
         <div class="container">
-            <div class="about-layout">
-                <div class="about-photo">
+            <div class="story-grid">
+                <div class="story-img reveal">
                     <img src="assets/okyanki-photos/WhatsApp Image 2026-03-29 at 12.20.50 AM (1).jpeg" alt="Chef Mohammed">
+                    <div class="story-img-accent"></div>
+                    <span class="story-img-tag">Est. Tel Aviv</span>
                 </div>
-                <div class="about-text">
-                    <h2>About the Chef</h2>
-                    <p>
-                        Mohammed Isefan, known as <strong>Abajamal</strong> — the proud father of Jamal.
-                        A professional kitchen chef based in Tel Aviv, bringing passion, flavor,
-                        and heart to every dish he creates.
-                    </p>
-                    <p>
-                        His cooking style is
+                <div class="story-text">
+                    <span class="section-chip reveal">About the Chef</span>
+                    <h2 class="reveal">The man behind<br>the <span class="gold italic">flavors</span></h2>
+                    <p class="reveal">Mohammed Isefan, known as <strong>Abajamal</strong> &mdash; the proud father of Jamal. A professional kitchen chef based in Tel Aviv who brings passion, precision, and soul to every dish.</p>
+                    <p class="reveal">His approach to cooking is
                         <span class="trait">original</span>,
                         <span class="trait">keen</span>,
                         <span class="trait">youthful</span>,
@@ -80,183 +87,159 @@
                         <span class="trait">natural</span>,
                         <span class="trait">kind</span>, and
                         <span class="trait">inspired</span> &mdash;
-                        just like the man himself.
-                    </p>
-                    <div class="about-tags">
-                        <span>Professional Chef</span>
-                        <span>Tel Aviv</span>
-                        <span>Father of Jamal</span>
+                        just like the man himself.</p>
+                    <div class="story-badges reveal">
+                        <div class="badge"><span class="badge-icon">&#127860;</span> Professional Chef</div>
+                        <div class="badge"><span class="badge-icon">&#128205;</span> Tel Aviv</div>
+                        <div class="badge"><span class="badge-icon">&#10084;&#65039;</span> Father of Jamal</div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Kitchen Gallery -->
-    <section class="gallery" id="gallery">
+    <!-- Marquee divider -->
+    <div class="marquee" aria-hidden="true">
+        <div class="marquee-track">
+            <span>Fresh Ingredients</span><span class="marquee-dot"></span>
+            <span>Handmade with Love</span><span class="marquee-dot"></span>
+            <span>Private Dining</span><span class="marquee-dot"></span>
+            <span>Catering</span><span class="marquee-dot"></span>
+            <span>Cooking Sessions</span><span class="marquee-dot"></span>
+            <span>Events</span><span class="marquee-dot"></span>
+            <span>Fresh Ingredients</span><span class="marquee-dot"></span>
+            <span>Handmade with Love</span><span class="marquee-dot"></span>
+            <span>Private Dining</span><span class="marquee-dot"></span>
+            <span>Catering</span><span class="marquee-dot"></span>
+            <span>Cooking Sessions</span><span class="marquee-dot"></span>
+            <span>Events</span><span class="marquee-dot"></span>
+        </div>
+    </div>
+
+    <!-- Kitchen / Videos -->
+    <section class="kitchen" id="kitchen">
         <div class="container">
-            <div class="section-head">
-                <h2>In the Kitchen</h2>
-                <p>Cooking, creating, and having fun.</p>
-            </div>
-            <div class="video-grid">
-                <div class="video-card">
-                    <video src="assets/okyanki-videos/5fd4eaef-7607-49ff-9543-9ef53c9f6863.MP4" controls preload="metadata" playsinline></video>
+            <span class="section-chip reveal">In the Kitchen</span>
+            <h2 class="reveal">Watch the <span class="gold italic">magic</span> happen</h2>
+            <div class="kitchen-grid">
+                <div class="vid-card reveal">
+                    <video src="assets/okyanki-videos/5fd4eaef-7607-49ff-9543-9ef53c9f6863.MP4" controls preload="metadata" playsinline poster=""></video>
                 </div>
-                <div class="video-card">
-                    <video src="assets/okyanki-videos/bd0660d2-9cc3-46bd-9acd-9d8b0005504f.MP4" controls preload="metadata" playsinline></video>
+                <div class="vid-card reveal">
+                    <video src="assets/okyanki-videos/bd0660d2-9cc3-46bd-9acd-9d8b0005504f.MP4" controls preload="metadata" playsinline poster=""></video>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Jimmy Section -->
+    <!-- Jimmy Section — Bento Grid -->
     <section class="jimmy" id="jimmy">
         <div class="container">
-            <div class="section-head">
-                <h2>Jamal <span class="jimmy-nick">(Jimmy)</span></h2>
-                <p>The little legend. Chef Mohammed's pride and joy.</p>
-            </div>
-            <div class="jimmy-grid">
-                <div class="jimmy-card big">
-                    <img src="assets/jimmy-photos/WhatsApp Image 2026-03-29 at 12.20.36 AM.jpeg" alt="Jimmy and Dad playing basketball">
+            <span class="section-chip reveal">Family</span>
+            <h2 class="reveal">Jamal <span class="handwritten">(Jimmy)</span></h2>
+            <p class="section-sub reveal">Chef Mohammed's pride and joy. The little legend.</p>
+
+            <div class="bento reveal">
+                <div class="bento-item bento-wide">
+                    <img src="assets/jimmy-photos/WhatsApp Image 2026-03-29 at 12.20.36 AM.jpeg" alt="Jimmy and Dad playing basketball" loading="lazy">
+                    <div class="bento-caption">Father & Son</div>
                 </div>
-                <div class="jimmy-card">
-                    <img src="assets/jimmy-photos/WhatsApp Image 2026-03-29 at 12.20.20 AM.jpeg" alt="Jimmy being playful">
+                <div class="bento-item">
+                    <img src="assets/jimmy-photos/WhatsApp Image 2026-03-29 at 12.20.20 AM.jpeg" alt="Jimmy being playful" loading="lazy">
                 </div>
-                <div class="jimmy-card">
-                    <img src="assets/jimmy-photos/WhatsApp Image 2026-03-29 at 12.20.21 AM.jpeg" alt="Jimmy picking strawberries">
+                <div class="bento-item">
+                    <img src="assets/jimmy-photos/WhatsApp Image 2026-03-29 at 12.20.21 AM.jpeg" alt="Jimmy picking strawberries" loading="lazy">
                 </div>
-                <div class="jimmy-card">
-                    <img src="assets/jimmy-photos/WhatsApp Image 2026-03-29 at 12.20.21 AM (1).jpeg" alt="Jimmy in the greenhouse">
+                <div class="bento-item">
+                    <img src="assets/jimmy-photos/WhatsApp Image 2026-03-29 at 12.20.21 AM (1).jpeg" alt="Jimmy in the greenhouse" loading="lazy">
                 </div>
-                <div class="jimmy-card">
-                    <img src="assets/jimmy-photos/WhatsApp Image 2026-03-29 at 12.20.21 AM (2).jpeg" alt="Jimmy holding strawberries">
+                <div class="bento-item">
+                    <img src="assets/jimmy-photos/WhatsApp Image 2026-03-29 at 12.20.21 AM (2).jpeg" alt="Jimmy holding strawberries" loading="lazy">
                 </div>
             </div>
 
-            <!-- Jimmy video -->
-            <div class="jimmy-video">
+            <div class="jimmy-vid reveal">
                 <video src="assets/jimmy-videos/8afe35a8-f32c-49a1-a2dc-a22fd5f3175f.MP4" controls preload="metadata" playsinline></video>
             </div>
         </div>
     </section>
 
-    <!-- Jimmy's Strawberry Game -->
+    <!-- Game -->
     <section class="game-section" id="game">
         <div class="container">
-            <div class="section-head">
-                <h2>Jimmy's Strawberry Rush</h2>
-                <p>Help Jimmy collect as many strawberries as he can! Use arrow keys or tap to move.</p>
-            </div>
-            <div class="game-wrapper">
+            <span class="section-chip reveal">Mini Game</span>
+            <h2 class="reveal">Jimmy's <span class="gold">Strawberry</span> Rush</h2>
+            <p class="section-sub reveal">Help Jimmy collect strawberries! Arrow keys or tap buttons to move.</p>
+            <div class="game-wrap reveal">
                 <div class="game-hud">
-                    <div class="game-score">Strawberries: <span id="gameScore">0</span></div>
-                    <div class="game-timer">Time: <span id="gameTimer">30</span>s</div>
-                    <div class="game-best">Best: <span id="gameBest">0</span></div>
+                    <div>Strawberries: <strong id="gameScore">0</strong></div>
+                    <div>Time: <strong id="gameTimer">30</strong>s</div>
+                    <div>Best: <strong id="gameBest">0</strong></div>
                 </div>
                 <canvas id="gameCanvas" width="600" height="400"></canvas>
-                <div class="game-over-screen" id="gameOver">
+                <div class="game-over" id="gameOver">
                     <h3>Time's Up!</h3>
                     <p>Jimmy collected <span id="finalScore">0</span> strawberries!</p>
-                    <button type="button" class="btn btn-book" id="gameRestart">Play Again</button>
+                    <button type="button" class="btn btn-fill" id="gameRestart">Play Again</button>
                 </div>
-                <button type="button" class="btn btn-book game-start-btn" id="gameStart">Start Game</button>
-                <div class="game-controls">
-                    <button type="button" class="game-ctrl" id="ctrlLeft" aria-label="Left">&#9664;</button>
-                    <button type="button" class="game-ctrl" id="ctrlRight" aria-label="Right">&#9654;</button>
+                <button type="button" class="btn btn-fill game-start" id="gameStart">Start Game</button>
+                <div class="game-pad">
+                    <button type="button" class="pad-btn" id="ctrlLeft" aria-label="Left">&#9664;</button>
+                    <button type="button" class="pad-btn" id="ctrlRight" aria-label="Right">&#9654;</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Booking Section -->
+    <!-- Booking -->
     <section class="booking" id="booking">
         <div class="container">
-            <div class="booking-inner">
-                <div class="booking-text">
-                    <h2>Book Chef Mohammed</h2>
-                    <p>Looking for an unforgettable culinary experience? Chef Mohammed is available for private events, dinner parties, catering, and cooking sessions.</p>
-                    <div class="booking-features">
-                        <div class="booking-feat">
-                            <div class="booking-feat-icon feat-icon-dinner">&#127860;</div>
-                            <div>
-                                <h4>Private Dinners</h4>
-                                <p>Intimate chef-prepared meals at your home</p>
-                            </div>
-                        </div>
-                        <div class="booking-feat">
-                            <div class="booking-feat-icon feat-icon-event">&#127881;</div>
-                            <div>
-                                <h4>Events &amp; Catering</h4>
-                                <p>Weddings, parties, corporate events</p>
-                            </div>
-                        </div>
-                        <div class="booking-feat">
-                            <div class="booking-feat-icon feat-icon-cook">&#128293;</div>
-                            <div>
-                                <h4>Cooking Sessions</h4>
-                                <p>Learn to cook with Chef Mohammed</p>
-                            </div>
-                        </div>
+            <div class="booking-grid">
+                <div class="booking-info">
+                    <span class="section-chip reveal">Hire the Chef</span>
+                    <h2 class="reveal">Book Chef<br><span class="gold italic">Mohammed</span></h2>
+                    <p class="reveal">Available for private events, dinner parties, catering, and cooking sessions.</p>
+                    <div class="booking-feats reveal">
+                        <div class="feat"><span class="feat-icon feat-a">&#127860;</span><div><strong>Private Dinners</strong><small>Chef-prepared meals at your home</small></div></div>
+                        <div class="feat"><span class="feat-icon feat-b">&#127881;</span><div><strong>Events &amp; Catering</strong><small>Weddings, parties, corporate</small></div></div>
+                        <div class="feat"><span class="feat-icon feat-c">&#128293;</span><div><strong>Cooking Sessions</strong><small>Learn from Chef Mohammed</small></div></div>
                     </div>
                 </div>
-                <div class="booking-form">
+                <div class="booking-form reveal">
                     <h3>Request a Booking</h3>
-                    <form id="bookingForm" action="https://formsubmit.co/ajax/placeholder@email.com" method="POST">
+                    <form id="bookingForm">
                         <div class="form-row">
-                            <div class="form-group">
-                                <label for="bookName">Your Name</label>
-                                <input type="text" id="bookName" name="name" placeholder="Full name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="bookPhone">Phone / WhatsApp</label>
-                                <input type="tel" id="bookPhone" name="phone" placeholder="+972..." required>
-                            </div>
+                            <div class="form-group"><label for="bookName">Name</label><input type="text" id="bookName" name="name" placeholder="Your full name" required></div>
+                            <div class="form-group"><label for="bookPhone">WhatsApp</label><input type="tel" id="bookPhone" name="phone" placeholder="+972..." required></div>
                         </div>
-                        <div class="form-group">
-                            <label for="bookType">Event Type</label>
+                        <div class="form-group"><label for="bookType">Event Type</label>
                             <select id="bookType" name="type" required>
-                                <option value="" disabled selected>Select event type</option>
-                                <option value="private-dinner">Private Dinner</option>
-                                <option value="catering">Event / Catering</option>
-                                <option value="cooking-session">Cooking Session</option>
-                                <option value="other">Other</option>
+                                <option value="" disabled selected>Select type</option>
+                                <option value="Private Dinner">Private Dinner</option>
+                                <option value="Event / Catering">Event / Catering</option>
+                                <option value="Cooking Session">Cooking Session</option>
+                                <option value="Other">Other</option>
                             </select>
                         </div>
                         <div class="form-row">
-                            <div class="form-group">
-                                <label for="bookDate">Preferred Date</label>
-                                <input type="date" id="bookDate" name="date" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="bookGuests">Number of Guests</label>
-                                <input type="number" id="bookGuests" name="guests" placeholder="e.g. 10" min="1" required>
-                            </div>
+                            <div class="form-group"><label for="bookDate">Date</label><input type="date" id="bookDate" name="date" required></div>
+                            <div class="form-group"><label for="bookGuests">Guests</label><input type="number" id="bookGuests" name="guests" placeholder="e.g. 10" min="1" required></div>
                         </div>
-                        <div class="form-group">
-                            <label for="bookMsg">Message</label>
-                            <textarea id="bookMsg" name="message" placeholder="Tell us about your event, preferences, dietary needs..."></textarea>
-                        </div>
-                        <button type="submit" class="btn-submit">Send Booking Request</button>
-                        <p class="form-note">We'll get back to you via WhatsApp within 24 hours</p>
+                        <div class="form-group"><label for="bookMsg">Message</label><textarea id="bookMsg" name="message" rows="3" placeholder="Details, dietary needs..."></textarea></div>
+                        <button type="submit" class="btn btn-fill btn-full">Send Booking via WhatsApp</button>
+                        <p class="form-note">Opens WhatsApp with your booking details</p>
                     </form>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Instagram CTA -->
-    <section class="ig-section">
+    <!-- Instagram Banner -->
+    <section class="ig-banner">
         <div class="container">
-            <div class="ig-card">
-                <div class="ig-left">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                    <div>
-                        <h3>@abajamall</h3>
-                        <p>Daily cooking, behind the scenes, life updates</p>
-                    </div>
-                </div>
+            <div class="ig-inner reveal">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12s.014 3.668.072 4.948c.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24s3.668-.014 4.948-.072c4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                <div><h3>@abajamall</h3><p>Daily cooking, behind the scenes, life updates</p></div>
                 <a href="https://www.instagram.com/abajamall" target="_blank" rel="noopener noreferrer" class="btn btn-ig">Follow on Instagram</a>
             </div>
         </div>
@@ -265,20 +248,16 @@
     <!-- Contact -->
     <section class="contact" id="contact">
         <div class="container">
-            <div class="section-head">
-                <h2>Get in Touch</h2>
-                <p>For bookings, collabs, or just to say hello.</p>
-            </div>
-            <div class="contact-grid">
-                <a href="https://wa.me/972527726892" target="_blank" rel="noopener noreferrer" class="contact-card wa">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                    <h3>WhatsApp</h3>
-                    <p>Message directly</p>
+            <div class="contact-cards reveal">
+                <a href="https://wa.me/972527726892" target="_blank" rel="noopener noreferrer" class="c-card c-wa">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    <strong>WhatsApp</strong>
+                    <span>+972 52-772-6892</span>
                 </a>
-                <a href="https://www.instagram.com/abajamall" target="_blank" rel="noopener noreferrer" class="contact-card ig">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                    <h3>Instagram</h3>
-                    <p>@abajamall</p>
+                <a href="https://www.instagram.com/abajamall" target="_blank" rel="noopener noreferrer" class="c-card c-ig">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12s.014 3.668.072 4.948c.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24s3.668-.014 4.948-.072c4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                    <strong>Instagram</strong>
+                    <span>@abajamall</span>
                 </a>
             </div>
         </div>
@@ -287,16 +266,15 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <!-- Secret: first letter of each word spells OKYANKI -->
             <p class="footer-quote" id="footerQuote">"<span class="fl">O</span>ur <span class="fl">K</span>itchen <span class="fl">Y</span>ields <span class="fl">A</span>mazing <span class="fl">N</span>ew <span class="fl">K</span>ulinary <span class="fl">I</span>nspirations"</p>
             <p class="footer-copy">&copy; 2026 Chef Mohammed Isefan</p>
         </div>
     </footer>
 
-    <!-- Easter egg overlay -->
+    <!-- Easter egg -->
     <div class="egg" id="egg">
-        <div class="egg-inner">
-            <p class="egg-label">You found him</p>
+        <div class="egg-box">
+            <p class="egg-top">You found him</p>
             <h2 class="egg-name">OKYANKI</h2>
             <p class="egg-sub">The legend</p>
             <button type="button" onclick="document.getElementById('egg').classList.remove('show')">Close</button>
