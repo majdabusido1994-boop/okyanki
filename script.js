@@ -68,6 +68,51 @@ if (bookForm) {
     });
 }
 
+// --- Background music ---
+const musicBtn = document.getElementById('musicToggle');
+if (musicBtn) {
+    const musicLabel = musicBtn.querySelector('.music-label');
+    // Royalty-free kitchen/lofi ambient
+    const audio = new Audio('https://cdn.pixabay.com/audio/2024/11/01/audio_1a2b3c4d5e.mp3');
+    audio.loop = true;
+    audio.volume = 0.3;
+
+    // Try multiple free sources as fallback
+    const sources = [
+        'https://cdn.pixabay.com/audio/2022/10/25/audio_56c1e5b001.mp3',
+        'https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3',
+        'https://cdn.pixabay.com/audio/2021/11/25/audio_cb4b9e438b.mp3'
+    ];
+    let srcIndex = 0;
+
+    audio.addEventListener('error', () => {
+        if (srcIndex < sources.length) {
+            audio.src = sources[srcIndex++];
+            if (musicBtn.classList.contains('playing')) audio.play().catch(() => {});
+        }
+    });
+
+    let playing = false;
+    musicBtn.addEventListener('click', () => {
+        if (playing) {
+            audio.pause();
+            musicBtn.classList.remove('playing');
+            musicLabel.textContent = 'Play Music';
+        } else {
+            audio.play().catch(() => {
+                // Try next source on failure
+                if (srcIndex < sources.length) {
+                    audio.src = sources[srcIndex++];
+                    audio.play().catch(() => {});
+                }
+            });
+            musicBtn.classList.add('playing');
+            musicLabel.textContent = 'Playing';
+        }
+        playing = !playing;
+    });
+}
+
 // --- Console ---
 console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-weight:bold;padding:10px 20px;border-radius:8px;');
 
