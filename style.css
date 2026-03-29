@@ -408,29 +408,71 @@ section h2 {
     100% { transform: translateX(-50%); }
 }
 
-/* ---- Kitchen / Videos ---- */
-.kitchen { padding: 120px 0; background: var(--cream-dark); }
-
-.kitchen-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 20px; margin-top: 40px;
+/* ---- Lifestyle / Gym — Fullscreen video ---- */
+.lifestyle {
+    position: relative;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
-.vid-card {
-    border-radius: var(--radius); overflow: hidden;
-    background: var(--charcoal);
-    aspect-ratio: 9/16; max-height: 520px;
+.lifestyle-video-bg {
+    position: absolute; inset: 0; z-index: 0;
 }
-.vid-card video {
+.lifestyle-video-bg video {
     width: 100%; height: 100%; object-fit: cover;
 }
-.kitchen-single {
-    grid-template-columns: 1fr;
-    max-width: 360px; margin: 40px auto 0;
+.lifestyle-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(28,25,23,0.6) 0%,
+        rgba(28,25,23,0.4) 50%,
+        rgba(28,25,23,0.7) 100%
+    );
 }
 
-/* ---- Jimmy / Bento ---- */
-.jimmy { padding: 120px 0; }
+.lifestyle-content {
+    position: relative; z-index: 2;
+    text-align: center;
+    padding: 80px 24px;
+    max-width: 600px;
+}
+.lifestyle-content .section-chip { color: var(--sand); }
+.lifestyle-content h2 { color: #fff; }
+.lifestyle-content p {
+    color: var(--sand); font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+/* ---- Jimmy / Bento — Video background ---- */
+.jimmy {
+    position: relative;
+    padding: 120px 0;
+    overflow: hidden;
+}
+
+.jimmy-video-bg {
+    position: absolute; inset: 0; z-index: 0;
+}
+.jimmy-video-bg video {
+    width: 100%; height: 100%; object-fit: cover;
+}
+.jimmy-overlay {
+    position: absolute; inset: 0;
+    background: rgba(28,25,23,0.82);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+}
+
+.jimmy-inner {
+    position: relative; z-index: 2;
+}
+.jimmy .section-chip { color: var(--sand); }
+.jimmy h2 { color: #fff; }
+.jimmy .section-sub { color: var(--sand); }
 
 .bento {
     display: grid;
@@ -441,6 +483,8 @@ section h2 {
 .bento-item {
     border-radius: var(--radius); overflow: hidden;
     position: relative;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.08);
 }
 .bento-item img {
     width: 100%; height: 100%;
@@ -459,14 +503,7 @@ section h2 {
     text-shadow: 0 2px 8px rgba(0,0,0,0.5);
 }
 
-.jimmy-vid {
-    margin-top: 32px;
-    max-width: 360px; margin-left: auto; margin-right: auto;
-    border-radius: var(--radius); overflow: hidden;
-    background: var(--charcoal);
-    aspect-ratio: 9/16; max-height: 520px;
-}
-.jimmy-vid video { width: 100%; height: 100%; object-fit: cover; }
+/* jimmy-vid removed — video is now section background */
 
 /* ---- Game ---- */
 .game-section { padding: 120px 0; background: var(--cream-dark); }
