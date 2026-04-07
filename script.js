@@ -144,26 +144,31 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
     const W = canvas.width, H = canvas.height;
     const GAME_TIME = 45;
 
-    // --- Web Audio SFX ---
+    // --- Web Audio SFX (pooled) ---
     let audioCtx = null;
     function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    let lastSfxTime = 0;
     function playTone(freq, dur, type, vol) {
         if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        if (now - lastSfxTime < 0.03) return; // throttle rapid SFX
+        lastSfxTime = now;
         const o = audioCtx.createOscillator();
         const g = audioCtx.createGain();
         o.type = type || 'sine';
         o.frequency.value = freq;
         g.gain.value = vol || 0.12;
-        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        g.gain.exponentialRampToValueAtTime(0.001, now + dur);
         o.connect(g); g.connect(audioCtx.destination);
-        o.start(); o.stop(audioCtx.currentTime + dur);
+        o.start(now); o.stop(now + dur + 0.01);
+        o.onended = () => { o.disconnect(); g.disconnect(); };
     }
-    function sfxCollect() { playTone(880, 0.1, 'sine', 0.15); playTone(1100, 0.15, 'sine', 0.1); }
-    function sfxGold() { playTone(1200, 0.08, 'square', 0.1); playTone(1500, 0.12, 'sine', 0.12); playTone(1800, 0.18, 'sine', 0.08); }
-    function sfxMagnet() { playTone(400, 0.2, 'sawtooth', 0.08); playTone(600, 0.3, 'sine', 0.1); }
-    function sfxRotten() { playTone(200, 0.2, 'sawtooth', 0.12); playTone(150, 0.3, 'square', 0.08); }
-    function sfxCombo() { playTone(660, 0.06, 'sine', 0.1); playTone(880, 0.08, 'sine', 0.12); playTone(1100, 0.12, 'sine', 0.1); }
-    function sfxEnd() { playTone(440, 0.3, 'sine', 0.15); playTone(330, 0.4, 'sine', 0.12); playTone(220, 0.5, 'sine', 0.1); }
+    function sfxCollect() { playTone(880, 0.1, 'sine', 0.12); }
+    function sfxGold() { playTone(1500, 0.12, 'sine', 0.1); }
+    function sfxMagnet() { playTone(500, 0.2, 'sine', 0.08); }
+    function sfxRotten() { playTone(200, 0.15, 'sawtooth', 0.08); }
+    function sfxCombo() { playTone(1100, 0.1, 'sine', 0.1); }
+    function sfxEnd() { playTone(330, 0.4, 'sine', 0.12); }
 
     // --- State ---
     let running = false, score = 0, timeLeft = GAME_TIME;
@@ -201,15 +206,17 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
         });
     }
 
-    // --- Particles ---
+    // --- Particles (capped) ---
+    const MAX_PARTICLES = 40;
     function burst(x, y, color, count, spread) {
-        for (let i = 0; i < count; i++) {
+        const actual = Math.min(count, MAX_PARTICLES - particles.length);
+        for (let i = 0; i < actual; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = 1 + Math.random() * spread;
             particles.push({
                 x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed - 1,
-                life: 30 + Math.random()*20, maxLife: 50,
-                r: 2 + Math.random()*3, color, gravity: 0.06
+                life: 20 + Math.random()*10, maxLife: 30,
+                r: 2 + Math.random()*2, color, gravity: 0.08
             });
         }
     }
@@ -562,7 +569,7 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
                     const pts = Math.min(combo, 5);
                     score += pts;
                     addFloatText(it.x, it.y, '+' + pts, '#f87171');
-                    burst(it.x, it.y, '#dc2626', 8, 3);
+                    burst(it.x, it.y, '#dc2626', 4, 2);
                     sfxCollect();
                     if (combo > 1 && combo % 5 === 0) sfxCombo();
                 } else if (it.type === 'golden') {
@@ -571,7 +578,7 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
                     const pts = Math.min(combo, 8) * 2;
                     score += pts;
                     addFloatText(it.x, it.y, '+' + pts + ' GOLD!', '#fbbf24');
-                    burst(it.x, it.y, '#fbbf24', 16, 5);
+                    burst(it.x, it.y, '#fbbf24', 6, 3);
                     shake(4, 8);
                     sfxGold();
                 } else if (it.type === 'rotten') {
@@ -579,22 +586,20 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
                     score = Math.max(0, score - loss);
                     combo = 0; comboTimer = 0;
                     addFloatText(it.x, it.y, '-' + loss, '#6b7280');
-                    burst(it.x, it.y, '#6b7280', 10, 3);
+                    burst(it.x, it.y, '#6b7280', 4, 2);
                     shake(6, 12);
                     sfxRotten();
                 } else if (it.type === 'magnet') {
                     magnetActive = true;
-                    magnetTimer = 300; // 5 seconds
+                    magnetTimer = 300;
                     addFloatText(it.x, it.y, 'MAGNET!', '#c4b5fd');
-                    burst(it.x, it.y, '#8b5cf6', 14, 4);
+                    burst(it.x, it.y, '#8b5cf6', 6, 3);
                     shake(3, 6);
                     sfxMagnet();
                 }
                 items.splice(i, 1);
                 scoreEl.textContent = score;
                 comboEl.textContent = 'x' + Math.max(1, Math.min(combo, 5));
-                hudCombo.classList.add('pop');
-                setTimeout(() => hudCombo.classList.remove('pop'), 150);
                 continue;
             }
 
