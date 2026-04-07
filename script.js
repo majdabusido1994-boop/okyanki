@@ -168,7 +168,7 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
     // --- State ---
     let running = false, score = 0, timeLeft = GAME_TIME;
     let combo = 0, maxCombo = 0, comboTimer = 0;
-    let spawnRate = 38, spawnTimer = 0, frame = 0;
+    let spawnRate = 50, spawnTimer = 0, frame = 0;
     let bestScore = parseInt(localStorage.getItem('jimmyBest2') || '0');
     let timerInterval = null, animFrame = null;
     let items = [], particles = [], floatTexts = [], bgStars = [];
@@ -177,7 +177,7 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
     bestEl.textContent = bestScore;
 
     // Item types: 'berry', 'golden', 'rotten', 'magnet'
-    const jimmy = { x: W/2 - 28, y: H - 78, w: 56, h: 68, speed: 7, dx: 0, vx: 0 };
+    const jimmy = { x: W/2 - 28, y: H - 78, w: 56, h: 68, speed: 4.5, dx: 0, vx: 0 };
 
     // Pre-gen background stars
     for (let i = 0; i < 60; i++) bgStars.push({ x: Math.random()*W, y: Math.random()*H*0.55, r: 0.5+Math.random()*1.5, tw: Math.random()*Math.PI*2 });
@@ -194,7 +194,7 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
         const sz = type === 'magnet' ? 20 : (20 + Math.random() * 10);
         items.push({
             x: 30 + Math.random() * (W - 60), y: -sz - 10,
-            size: sz, speed: 1.8 + Math.random() * 2 + frame * 0.001,
+            size: sz, speed: 1.2 + Math.random() * 1.2 + frame * 0.0004,
             wobble: Math.random() * Math.PI * 2,
             ws: 0.025 + Math.random() * 0.025,
             type: type, rot: 0
@@ -506,7 +506,7 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
         if (keys['ArrowLeft']||keys['a']) targetDx = -jimmy.speed;
         if (keys['ArrowRight']||keys['d']) targetDx = jimmy.speed;
         if (touchDir) targetDx = touchDir * jimmy.speed;
-        jimmy.vx += (targetDx - jimmy.vx) * 0.25;
+        jimmy.vx += (targetDx - jimmy.vx) * 0.15;
         jimmy.x += jimmy.vx;
         if (jimmy.x < 0) { jimmy.x = 0; jimmy.vx = 0; }
         if (jimmy.x + jimmy.w > W) { jimmy.x = W - jimmy.w; jimmy.vx = 0; }
@@ -529,7 +529,7 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
 
         // Spawn
         spawnTimer++;
-        const rate = Math.max(16, spawnRate - frame * 0.008);
+        const rate = Math.max(24, spawnRate - frame * 0.005);
         if (spawnTimer >= rate) { spawnItem(); spawnTimer = 0; }
 
         // Magnet pull
@@ -553,7 +553,7 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
             const it = items[i];
             it.y += it.speed;
             it.wobble += it.ws;
-            it.x += Math.sin(it.wobble) * 0.7;
+            it.x += Math.sin(it.wobble) * 0.4;
 
             if (collides(it)) {
                 if (it.type === 'berry') {
@@ -641,7 +641,7 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
 
     function startGame() {
         initAudio();
-        score = 0; timeLeft = GAME_TIME; spawnRate = 38; spawnTimer = 0; frame = 0;
+        score = 0; timeLeft = GAME_TIME; spawnRate = 50; spawnTimer = 0; frame = 0;
         combo = 0; maxCombo = 0; comboTimer = 0;
         magnetActive = false; magnetTimer = 0;
         items = []; particles = []; floatTexts = [];
