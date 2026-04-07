@@ -510,61 +510,93 @@ section h2 {
 
 .game-wrap {
     position: relative;
-    max-width: 600px; margin: 0 auto;
+    max-width: 640px; margin: 0 auto;
     border-radius: var(--radius); overflow: hidden;
-    border: 1px solid rgba(0,0,0,0.06);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 16px 56px rgba(0,0,0,0.12);
 }
 
 .game-hud {
-    display: flex; justify-content: space-between;
-    padding: 14px 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 20px;
     background: var(--charcoal); color: var(--cream);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
 }
-.game-hud strong { color: var(--gold-light); }
+.hud-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.hud-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+.hud-item strong { color: var(--gold-light); font-size: 1.1rem; }
+.hud-item small { color: var(--text-muted); font-size: 0.7rem; }
+.hud-combo { transition: transform 0.15s; }
+.hud-combo.pop { transform: scale(1.3); }
 
 #gameCanvas {
     display: block; width: 100%; height: auto;
-    background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 60%, #4a7c2e 60%, #3d6b25 100%);
+    background: #1a1a2e;
 }
 
+/* Start screen */
+.game-start-screen {
+    position: absolute; inset: 0; z-index: 6;
+    background: rgba(26,26,46,0.95);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+}
+.game-start-screen.hidden { display: none; }
+
+.gs-inner { text-align: center; padding: 24px; }
+.gs-inner h3 {
+    font-family: var(--font-display);
+    font-size: 1.6rem; color: #fff; margin-bottom: 20px;
+}
+.gs-rules { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.gs-rule {
+    display: flex; align-items: center; gap: 10px; justify-content: center;
+    color: var(--sand); font-size: 0.88rem;
+}
+.gs-icon {
+    width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+}
+.gs-good { background: #dc2626; }
+.gs-gold { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+.gs-mag { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+.gs-bad { background: #6b7280; }
+
+/* Game over */
 .game-over {
     position: absolute; inset: 0;
-    background: rgba(45,41,38,0.92);
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
+    background: rgba(26,26,46,0.94);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     opacity: 0; pointer-events: none;
-    transition: opacity 0.3s; z-index: 5;
+    transition: opacity 0.4s; z-index: 5;
 }
 .game-over.show { opacity: 1; pointer-events: all; }
-.game-over h3 { font-family: var(--font-display); font-size: 2rem; color: #fff; margin-bottom: 8px; }
-.game-over p { color: var(--sand); font-size: 1.1rem; margin-bottom: 24px; }
-.game-over span { color: var(--gold-light); font-weight: 700; }
-
-.game-start {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 5; font-size: 1.05rem; padding: 16px 40px;
+.game-over h3 {
+    font-family: var(--font-display); font-size: 2rem;
+    color: #fff; margin-bottom: 4px;
 }
-.game-start.hidden { display: none; }
+.go-stars { font-size: 1.8rem; margin-bottom: 12px; letter-spacing: 4px; }
+.go-score { color: var(--gold-light); font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+.go-msg { color: var(--sand); font-size: 0.95rem; margin-bottom: 24px; opacity: 0.8; }
 
+/* D-pad */
 .game-pad {
     display: none; justify-content: center; gap: 16px;
     padding: 16px; background: var(--charcoal);
 }
 .pad-btn {
-    width: 64px; height: 50px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
+    width: 72px; height: 56px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
     color: #fff; border-radius: var(--radius-sm);
-    font-size: 1.3rem; cursor: pointer;
+    font-size: 1.4rem; cursor: pointer;
     -webkit-user-select: none; user-select: none;
-    transition: background 0.15s;
+    transition: background 0.1s;
 }
-.pad-btn:active { background: rgba(255,255,255,0.2); }
+.pad-btn:active { background: var(--terracotta); }
 
 /* ---- Booking ---- */
 .booking { padding: 120px 0; background: var(--charcoal); color: var(--cream); }
