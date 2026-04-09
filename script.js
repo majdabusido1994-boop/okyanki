@@ -117,21 +117,40 @@ if (musicBtn) {
 console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-weight:bold;padding:10px 20px;border-radius:8px;');
 
 // ============================================
-// JIMMY'S STRAWBERRY RUSH — v2.0
-// Particles, power-ups, combos, screen shake,
-// Web Audio SFX, star rating, rotten berries
+// JIMMY'S STRAWBERRY RUSH — v3.0
+// Fixed: roundRect polyfill, delta-time physics,
+// proper audio cleanup, touch on canvas, tab-safe timer
 // ============================================
 (function() {
     const canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+
+    // --- roundRect polyfill (fixes crash on older browsers) ---
+    if (!ctx.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+            if (typeof r === 'number') r = [r, r, r, r];
+            const [tl, tr, br, bl] = Array.isArray(r) ? r : [r, r, r, r];
+            this.moveTo(x + tl, y);
+            this.lineTo(x + w - tr, y);
+            this.quadraticCurveTo(x + w, y, x + w, y + tr);
+            this.lineTo(x + w, y + h - br);
+            this.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+            this.lineTo(x + bl, y + h);
+            this.quadraticCurveTo(x, y + h, x, y + h - bl);
+            this.lineTo(x, y + tl);
+            this.quadraticCurveTo(x, y, x + tl, y);
+            this.closePath();
+            return this;
+        };
+    }
+
     const startBtn = document.getElementById('gameStart');
     const startScreen = document.getElementById('gameStartScreen');
     const restartBtn = document.getElementById('gameRestart');
     const overScreen = document.getElementById('gameOver');
     const scoreEl = document.getElementById('gameScore');
     const comboEl = document.getElementById('gameCombo');
-    const hudCombo = document.getElementById('hudCombo');
     const timerEl = document.getElementById('gameTimer');
     const bestEl = document.getElementById('gameBest');
     const finalEl = document.getElementById('finalScore');
@@ -143,108 +162,130 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
 
     const W = canvas.width, H = canvas.height;
     const GAME_TIME = 45;
+    const TARGET_FPS = 60;
+    const FRAME_MS = 1000 / TARGET_FPS;
 
-    // --- Web Audio SFX (pooled) ---
+    // --- Audio: single shared context, reuse gain node ---
     let audioCtx = null;
-    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    let masterGain = null;
     let lastSfxTime = 0;
-    function playTone(freq, dur, type, vol) {
-        if (!audioCtx) return;
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.15;
+            masterGain.connect(audioCtx.destination);
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    function playTone(freq, dur, type) {
+        if (!audioCtx || !masterGain) return;
         const now = audioCtx.currentTime;
-        if (now - lastSfxTime < 0.03) return; // throttle rapid SFX
+        if (now - lastSfxTime < 0.05) return;
         lastSfxTime = now;
         const o = audioCtx.createOscillator();
         const g = audioCtx.createGain();
         o.type = type || 'sine';
-        o.frequency.value = freq;
-        g.gain.value = vol || 0.12;
+        o.frequency.setValueAtTime(freq, now);
+        g.gain.setValueAtTime(0.3, now);
         g.gain.exponentialRampToValueAtTime(0.001, now + dur);
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start(now); o.stop(now + dur + 0.01);
-        o.onended = () => { o.disconnect(); g.disconnect(); };
+        o.connect(g);
+        g.connect(masterGain);
+        o.start(now);
+        o.stop(now + dur + 0.02);
+        o.onended = function() { o.disconnect(); g.disconnect(); };
     }
-    function sfxCollect() { playTone(880, 0.1, 'sine', 0.12); }
-    function sfxGold() { playTone(1500, 0.12, 'sine', 0.1); }
-    function sfxMagnet() { playTone(500, 0.2, 'sine', 0.08); }
-    function sfxRotten() { playTone(200, 0.15, 'sawtooth', 0.08); }
-    function sfxCombo() { playTone(1100, 0.1, 'sine', 0.1); }
-    function sfxEnd() { playTone(330, 0.4, 'sine', 0.12); }
+    function sfxCollect() { playTone(880, 0.08, 'sine'); }
+    function sfxGold() { playTone(1400, 0.12, 'sine'); }
+    function sfxMagnet() { playTone(500, 0.15, 'sine'); }
+    function sfxRotten() { playTone(200, 0.12, 'sawtooth'); }
+    function sfxCombo() { playTone(1100, 0.1, 'sine'); }
+    function sfxEnd() { playTone(330, 0.3, 'sine'); }
 
     // --- State ---
-    let running = false, score = 0, timeLeft = GAME_TIME;
-    let combo = 0, maxCombo = 0, comboTimer = 0;
-    let spawnRate = 50, spawnTimer = 0, frame = 0;
-    let bestScore = parseInt(localStorage.getItem('jimmyBest2') || '0');
-    let timerInterval = null, animFrame = null;
-    let items = [], particles = [], floatTexts = [], bgStars = [];
-    let shakeX = 0, shakeY = 0, shakeDur = 0;
-    let magnetActive = false, magnetTimer = 0;
-    bestEl.textContent = bestScore;
+    var running = false, score = 0, timeLeft = GAME_TIME;
+    var combo = 0, maxCombo = 0, comboTimer = 0;
+    var spawnAccum = 0, frame = 0;
+    var bestScore = parseInt(localStorage.getItem('jimmyBest3') || '0');
+    var timerStart = 0, animFrame = null;
+    var items = [], particles = [], floatTexts = [], bgStars = [];
+    var shakeX = 0, shakeY = 0, shakeDur = 0;
+    var magnetActive = false, magnetTimer = 0;
+    var lastTime = 0;
+    if (bestEl) bestEl.textContent = bestScore;
 
-    // Item types: 'berry', 'golden', 'rotten', 'magnet'
-    const jimmy = { x: W/2 - 28, y: H - 78, w: 56, h: 68, speed: 4.5, dx: 0, vx: 0 };
+    var jimmy = { x: W/2 - 28, y: H - 78, w: 56, h: 68, speed: 4.5, vx: 0 };
 
     // Pre-gen background stars
-    for (let i = 0; i < 60; i++) bgStars.push({ x: Math.random()*W, y: Math.random()*H*0.55, r: 0.5+Math.random()*1.5, tw: Math.random()*Math.PI*2 });
+    for (var i = 0; i < 50; i++) bgStars.push({ x: Math.random()*W, y: Math.random()*H*0.55, r: 0.5+Math.random()*1.5, tw: Math.random()*Math.PI*2 });
 
     // --- Spawning ---
     function spawnItem() {
-        const r = Math.random();
-        let type = 'berry';
-        if (frame > 120) { // After 2 seconds
-            if (r < 0.08) type = 'golden';
-            else if (r < 0.2) type = 'rotten';
-            else if (r < 0.24 && !magnetActive) type = 'magnet';
+        var r = Math.random();
+        var type = 'berry';
+        var elapsed = GAME_TIME - timeLeft;
+        if (elapsed > 3) {
+            if (r < 0.07) type = 'golden';
+            else if (r < 0.18) type = 'rotten';
+            else if (r < 0.22 && !magnetActive) type = 'magnet';
         }
-        const sz = type === 'magnet' ? 20 : (20 + Math.random() * 10);
+        var sz = type === 'magnet' ? 18 : (18 + Math.random() * 8);
+        var baseSpeed = 1.0 + Math.random() * 1.0;
+        var timeBonus = elapsed * 0.012;
         items.push({
             x: 30 + Math.random() * (W - 60), y: -sz - 10,
-            size: sz, speed: 1.2 + Math.random() * 1.2 + frame * 0.0004,
+            size: sz, speed: baseSpeed + Math.min(timeBonus, 1.2),
             wobble: Math.random() * Math.PI * 2,
-            ws: 0.025 + Math.random() * 0.025,
-            type: type, rot: 0
+            ws: 0.02 + Math.random() * 0.02,
+            type: type
         });
     }
 
-    // --- Particles (capped) ---
-    const MAX_PARTICLES = 40;
+    // --- Particles (capped, pooled) ---
+    var MAX_PARTICLES = 30;
     function burst(x, y, color, count, spread) {
-        const actual = Math.min(count, MAX_PARTICLES - particles.length);
-        for (let i = 0; i < actual; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 1 + Math.random() * spread;
+        var actual = Math.min(count, MAX_PARTICLES - particles.length);
+        for (var i = 0; i < actual; i++) {
+            var angle = Math.random() * Math.PI * 2;
+            var spd = 0.8 + Math.random() * spread;
             particles.push({
-                x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed - 1,
-                life: 20 + Math.random()*10, maxLife: 30,
-                r: 2 + Math.random()*2, color, gravity: 0.08
+                x: x, y: y, vx: Math.cos(angle)*spd, vy: Math.sin(angle)*spd - 0.8,
+                life: 18, maxLife: 18,
+                r: 2 + Math.random()*2, color: color, gravity: 0.1
             });
         }
     }
 
     function addFloatText(x, y, text, color) {
-        floatTexts.push({ x, y, text, color, life: 40, maxLife: 40 });
+        if (floatTexts.length > 8) floatTexts.shift();
+        floatTexts.push({ x: x, y: y, text: text, color: color, life: 32, maxLife: 32 });
     }
 
-    // --- Drawing ---
+    // --- Background (cached gradient) ---
+    var bgGradient = null;
+    function createBgGradient() {
+        bgGradient = ctx.createLinearGradient(0, 0, 0, H);
+        bgGradient.addColorStop(0, '#0f0f23');
+        bgGradient.addColorStop(0.35, '#1a1a3e');
+        bgGradient.addColorStop(0.55, '#1a2a1a');
+        bgGradient.addColorStop(0.6, '#2d5a1e');
+        bgGradient.addColorStop(1, '#1e4a14');
+    }
+    createBgGradient();
+
     function drawBg() {
-        // Night sky gradient
-        const g = ctx.createLinearGradient(0, 0, 0, H);
-        g.addColorStop(0, '#0f0f23');
-        g.addColorStop(0.35, '#1a1a3e');
-        g.addColorStop(0.55, '#1a2a1a');
-        g.addColorStop(0.6, '#2d5a1e');
-        g.addColorStop(1, '#1e4a14');
-        ctx.fillStyle = g;
+        ctx.fillStyle = bgGradient;
         ctx.fillRect(0, 0, W, H);
 
         // Stars
-        bgStars.forEach(s => {
-            s.tw += 0.02;
-            const a = 0.3 + Math.sin(s.tw) * 0.3;
+        for (var i = 0; i < bgStars.length; i++) {
+            var s = bgStars[i];
+            s.tw += 0.015;
+            var a = 0.3 + Math.sin(s.tw) * 0.3;
             ctx.globalAlpha = a;
             ctx.fillStyle = '#fff';
             ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
-        });
+        }
         ctx.globalAlpha = 1;
 
         // Moon
@@ -253,44 +294,44 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
         ctx.fillStyle = '#0f0f23';
         ctx.beginPath(); ctx.arc(W - 70, 55, 24, 0, Math.PI*2); ctx.fill();
 
-        // Greenhouse rows
-        ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+        // Ground lines
+        ctx.strokeStyle = 'rgba(255,255,255,0.03)';
         ctx.lineWidth = 1;
-        for (let i = 0; i < 8; i++) {
+        for (var j = 0; j < 6; j++) {
             ctx.beginPath();
-            ctx.moveTo(0, H*0.6 + i*16);
-            ctx.lineTo(W, H*0.6 + i*16);
+            ctx.moveTo(0, H*0.62 + j*18);
+            ctx.lineTo(W, H*0.62 + j*18);
             ctx.stroke();
         }
 
-        // Ground glow
+        // Magnet ground glow
         if (magnetActive) {
-            ctx.fillStyle = 'rgba(139,92,246,0.06)';
+            ctx.fillStyle = 'rgba(139,92,246,0.05)';
             ctx.fillRect(0, H*0.58, W, H*0.42);
         }
     }
 
     function drawJimmy() {
-        const x = jimmy.x, y = jimmy.y, w = jimmy.w, h = jimmy.h;
-        const cx = x + w/2;
+        var x = jimmy.x, y = jimmy.y, w = jimmy.w, h = jimmy.h;
+        var cx = x + w/2;
 
         // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.beginPath(); ctx.ellipse(cx, y+h+2, 24, 6, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.18)';
+        ctx.beginPath(); ctx.ellipse(cx, y+h+2, 22, 5, 0, 0, Math.PI*2); ctx.fill();
 
         // Magnet aura
         if (magnetActive) {
-            ctx.strokeStyle = 'rgba(139,92,246,' + (0.3 + Math.sin(frame*0.1)*0.2) + ')';
-            ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.arc(cx, y+h/2, 44, 0, Math.PI*2); ctx.stroke();
+            ctx.strokeStyle = 'rgba(139,92,246,' + (0.25 + Math.sin(frame*0.08)*0.15) + ')';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(cx, y+h/2, 42, 0, Math.PI*2); ctx.stroke();
             ctx.lineWidth = 1;
         }
 
-        // Body (yellow shirt)
-        const bodyG = ctx.createLinearGradient(x+8, y+18, x+8, y+h-10);
+        // Body (yellow shirt) — use fillRect instead of roundRect for safety
+        var bodyG = ctx.createLinearGradient(x+8, y+18, x+8, y+h-10);
         bodyG.addColorStop(0, '#f5d063'); bodyG.addColorStop(1, '#e6b830');
         ctx.fillStyle = bodyG;
-        ctx.beginPath(); ctx.roundRect(x+10, y+22, w-20, h-32, 8); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(x+10, y+22, w-20, h-32, 6); ctx.fill();
 
         // Head
         ctx.fillStyle = '#d4a76a';
@@ -302,89 +343,86 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
         ctx.fillRect(cx-16, y+6, 32, 6);
 
         // Eyes (blink every ~3s)
-        const blinking = Math.floor(frame/180) % 20 === 0 && frame % 180 < 4;
+        var blinking = Math.floor(frame/180) % 20 === 0 && frame % 180 < 4;
         ctx.fillStyle = '#1a1a1a';
         if (blinking) {
             ctx.fillRect(cx-7, y+14, 5, 2);
             ctx.fillRect(cx+2, y+14, 5, 2);
         } else {
-            ctx.beginPath(); ctx.arc(cx-5, y+15, 2.5, 0, Math.PI*2); ctx.arc(cx+5, y+15, 2.5, 0, Math.PI*2); ctx.fill();
-            // Eye shine
+            ctx.beginPath(); ctx.arc(cx-5, y+15, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx+5, y+15, 2.5, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#fff';
-            ctx.beginPath(); ctx.arc(cx-4, y+14, 1, 0, Math.PI*2); ctx.arc(cx+6, y+14, 1, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx-4, y+14, 1, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx+6, y+14, 1, 0, Math.PI*2); ctx.fill();
         }
 
-        // Mouth — smile bigger with combo
+        // Mouth
         ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1.5;
-        const smileW = 5 + Math.min(combo, 5);
+        var smileW = 5 + Math.min(combo, 5);
         ctx.beginPath(); ctx.arc(cx, y+19, smileW, 0.1*Math.PI, 0.9*Math.PI); ctx.stroke();
 
-        // Legs (animated run)
-        const legOff = running ? Math.sin(frame*0.15) * 3 : 0;
+        // Legs
+        var legOff = running ? Math.sin(frame*0.12) * 3 : 0;
         ctx.fillStyle = '#4a6fa5';
         ctx.fillRect(x+14, y+h-14+legOff, 10, 14);
         ctx.fillRect(x+w-24, y+h-14-legOff, 10, 14);
 
         // Shoes
         ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.roundRect(x+11, y+h-1+legOff, 16, 5, 3);
-        ctx.roundRect(x+w-27, y+h-1-legOff, 16, 5, 3);
-        ctx.fill();
+        ctx.fillRect(x+12, y+h-1+legOff, 14, 4);
+        ctx.fillRect(x+w-26, y+h-1-legOff, 14, 4);
 
         // Basket
-        const basketG = ctx.createLinearGradient(x, y+36, x, y+50);
+        var basketG = ctx.createLinearGradient(x, y+36, x, y+50);
         basketG.addColorStop(0, '#a0781e'); basketG.addColorStop(1, '#6d5210');
         ctx.fillStyle = basketG;
         ctx.beginPath();
         ctx.moveTo(x-4, y+36); ctx.lineTo(x+w+4, y+36);
         ctx.lineTo(x+w-4, y+50); ctx.lineTo(x+4, y+50);
         ctx.closePath(); ctx.fill();
-        // Basket rim
         ctx.strokeStyle = '#c49a30'; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(x-4, y+36); ctx.lineTo(x+w+4, y+36); ctx.stroke();
-        // Weave pattern
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 0.5;
-        for (let i = 0; i < 4; i++) {
-            ctx.beginPath(); ctx.moveTo(x+4+i*13, y+36); ctx.lineTo(x+8+i*13, y+50); ctx.stroke();
+        // Weave
+        ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 0.5;
+        for (var wi = 0; wi < 4; wi++) {
+            ctx.beginPath(); ctx.moveTo(x+4+wi*13, y+36); ctx.lineTo(x+8+wi*13, y+50); ctx.stroke();
         }
 
         // Berries in basket
-        const bc = Math.min(score, 8);
-        for (let i = 0; i < bc; i++) {
+        var bc = Math.min(score, 8);
+        for (var bi = 0; bi < bc; bi++) {
             ctx.fillStyle = '#dc2626';
-            ctx.beginPath(); ctx.arc(x+8+i*6, y+42, 3.5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x+8+bi*6, y+42, 3, 0, Math.PI*2); ctx.fill();
         }
 
         // Hands
         ctx.fillStyle = '#d4a76a';
-        ctx.beginPath(); ctx.arc(x+2, y+38, 5, 0, Math.PI*2); ctx.arc(x+w-2, y+38, 5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+2, y+38, 5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+w-2, y+38, 5, 0, Math.PI*2); ctx.fill();
     }
 
     function drawItem(it) {
         ctx.save();
         ctx.translate(it.x, it.y);
-        it.rot += 0.01;
-        const sz = it.size;
+        var sz = it.size;
 
         if (it.type === 'berry' || it.type === 'golden') {
-            // Glow for golden
             if (it.type === 'golden') {
                 ctx.shadowColor = '#fbbf24';
-                ctx.shadowBlur = 16;
+                ctx.shadowBlur = 12;
             }
             // Leaf
             ctx.fillStyle = '#22c55e';
-            ctx.beginPath(); ctx.ellipse(-4, -sz*0.45, 7, 3.5, -0.4, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(4, -sz*0.45, 7, 3.5, 0.4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(-4, -sz*0.45, 6, 3, -0.4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(4, -sz*0.45, 6, 3, 0.4, 0, Math.PI*2); ctx.fill();
             // Stem
             ctx.strokeStyle = '#16a34a'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.moveTo(0, -sz*0.55); ctx.lineTo(0, -sz*0.35); ctx.stroke();
             // Body
-            const bc = it.type === 'golden' ? '#fbbf24' : '#dc2626';
-            const bg = ctx.createRadialGradient(-sz*0.15, -sz*0.1, 0, 0, 0, sz);
+            var bc2 = it.type === 'golden' ? '#fbbf24' : '#dc2626';
+            var bg = ctx.createRadialGradient(-sz*0.15, -sz*0.1, 0, 0, 0, sz);
             bg.addColorStop(0, it.type === 'golden' ? '#fde68a' : '#f87171');
-            bg.addColorStop(1, bc);
+            bg.addColorStop(1, bc2);
             ctx.fillStyle = bg;
             ctx.beginPath();
             ctx.moveTo(0, -sz*0.5);
@@ -395,19 +433,18 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
             ctx.shadowBlur = 0;
             // Seeds
             ctx.fillStyle = it.type === 'golden' ? '#f59e0b' : '#fbbf24';
-            for (let i = 0; i < 5; i++) {
-                const sx = Math.cos(i*1.3+0.5)*sz*0.3;
-                const sy = Math.sin(i*1.1)*sz*0.25 + sz*0.1;
-                ctx.beginPath(); ctx.ellipse(sx, sy, 1.5, 2.5, i*0.3, 0, Math.PI*2); ctx.fill();
+            for (var si = 0; si < 4; si++) {
+                var sx = Math.cos(si*1.5+0.5)*sz*0.28;
+                var sy = Math.sin(si*1.2)*sz*0.22 + sz*0.1;
+                ctx.beginPath(); ctx.ellipse(sx, sy, 1.2, 2, si*0.3, 0, Math.PI*2); ctx.fill();
             }
             // Shine
-            ctx.fillStyle = 'rgba(255,255,255,0.35)';
-            ctx.beginPath(); ctx.ellipse(-sz*0.18, -sz*0.15, sz*0.1, sz*0.22, -0.3, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.beginPath(); ctx.ellipse(-sz*0.18, -sz*0.15, sz*0.08, sz*0.18, -0.3, 0, Math.PI*2); ctx.fill();
         }
         else if (it.type === 'rotten') {
-            // Gray-green berry
             ctx.fillStyle = '#4b5563';
-            ctx.beginPath(); ctx.ellipse(-3, -sz*0.4, 5, 3, -0.3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(-3, -sz*0.4, 4, 2.5, -0.3, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#6b7280';
             ctx.beginPath();
             ctx.moveTo(0, -sz*0.45);
@@ -420,41 +457,40 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
             ctx.beginPath(); ctx.moveTo(-4,-2); ctx.lineTo(-1,1); ctx.moveTo(-1,-2); ctx.lineTo(-4,1); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(1,-2); ctx.lineTo(4,1); ctx.moveTo(4,-2); ctx.lineTo(1,1); ctx.stroke();
             // Stink lines
-            ctx.strokeStyle = 'rgba(134,239,172,0.4)'; ctx.lineWidth = 1;
-            for (let i = 0; i < 3; i++) {
-                const ox = (i-1)*8;
+            ctx.strokeStyle = 'rgba(134,239,172,0.35)'; ctx.lineWidth = 1;
+            for (var si2 = 0; si2 < 3; si2++) {
+                var ox = (si2-1)*8;
                 ctx.beginPath();
-                ctx.moveTo(ox, -sz*0.6 - Math.sin(frame*0.08+i)*4);
-                ctx.quadraticCurveTo(ox+3, -sz*0.8 - Math.sin(frame*0.08+i)*6, ox-2, -sz - Math.sin(frame*0.08+i)*5);
+                ctx.moveTo(ox, -sz*0.6 - Math.sin(frame*0.06+si2)*3);
+                ctx.quadraticCurveTo(ox+2, -sz*0.8 - Math.sin(frame*0.06+si2)*5, ox-2, -sz - Math.sin(frame*0.06+si2)*4);
                 ctx.stroke();
             }
         }
         else if (it.type === 'magnet') {
-            // Purple orb
-            const mg = ctx.createRadialGradient(0, 0, 0, 0, 0, sz);
+            var mg = ctx.createRadialGradient(0, 0, 0, 0, 0, sz);
             mg.addColorStop(0, '#c4b5fd'); mg.addColorStop(0.5, '#8b5cf6'); mg.addColorStop(1, '#6d28d9');
             ctx.fillStyle = mg;
             ctx.beginPath(); ctx.arc(0, 0, sz, 0, Math.PI*2); ctx.fill();
             // Magnet icon
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
-            ctx.beginPath(); ctx.arc(0, -2, 7, Math.PI, 0); ctx.stroke();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(0, -2, 6, Math.PI, 0); ctx.stroke();
             ctx.fillStyle = '#fff';
-            ctx.fillRect(-7, -2, 3, 10);
-            ctx.fillRect(4, -2, 3, 10);
-            // Pulsing ring
-            const pulse = 0.5 + Math.sin(frame*0.1)*0.3;
+            ctx.fillRect(-6, -2, 3, 8);
+            ctx.fillRect(3, -2, 3, 8);
+            // Pulse ring
+            var pulse = 0.4 + Math.sin(frame*0.08)*0.25;
             ctx.strokeStyle = 'rgba(196,181,253,' + pulse + ')';
             ctx.lineWidth = 1.5;
-            ctx.beginPath(); ctx.arc(0, 0, sz + 4 + Math.sin(frame*0.08)*3, 0, Math.PI*2); ctx.stroke();
+            ctx.beginPath(); ctx.arc(0, 0, sz + 3 + Math.sin(frame*0.06)*2, 0, Math.PI*2); ctx.stroke();
         }
         ctx.restore();
     }
 
     function drawParticles() {
-        for (let i = particles.length - 1; i >= 0; i--) {
-            const p = particles[i];
+        for (var i = particles.length - 1; i >= 0; i--) {
+            var p = particles[i];
             p.x += p.vx; p.y += p.vy; p.vy += p.gravity; p.life--;
-            const a = p.life / p.maxLife;
+            var a = p.life / p.maxLife;
             ctx.globalAlpha = a;
             ctx.fillStyle = p.color;
             ctx.beginPath(); ctx.arc(p.x, p.y, p.r * a, 0, Math.PI*2); ctx.fill();
@@ -464,12 +500,12 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
     }
 
     function drawFloatTexts() {
-        for (let i = floatTexts.length - 1; i >= 0; i--) {
-            const ft = floatTexts[i];
-            ft.y -= 1.2; ft.life--;
-            const a = ft.life / ft.maxLife;
+        for (var i = floatTexts.length - 1; i >= 0; i--) {
+            var ft = floatTexts[i];
+            ft.y -= 1; ft.life--;
+            var a = ft.life / ft.maxLife;
             ctx.globalAlpha = a;
-            ctx.font = 'bold 18px Inter, sans-serif';
+            ctx.font = 'bold 16px Inter, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillStyle = ft.color;
             ctx.fillText(ft.text, ft.x, ft.y);
@@ -480,47 +516,83 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
 
     // --- Collision ---
     function collides(it) {
-        const pad = magnetActive ? 40 : 6;
+        var pad = magnetActive ? 35 : 4;
         return it.x > jimmy.x - pad && it.x < jimmy.x + jimmy.w + pad &&
                it.y + it.size*0.5 > jimmy.y + 28 && it.y - it.size*0.5 < jimmy.y + 54;
     }
 
     // --- Input ---
-    const keys = {};
-    document.addEventListener('keydown', e => { keys[e.key]=true; if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&running) e.preventDefault(); });
-    document.addEventListener('keyup', e => { keys[e.key]=false; });
+    var keys = {};
+    document.addEventListener('keydown', function(e) {
+        keys[e.key] = true;
+        if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && running) e.preventDefault();
+    });
+    document.addEventListener('keyup', function(e) { keys[e.key] = false; });
 
-    let touchDir = 0;
+    var touchDir = 0;
     function bindTouch(el, dir) {
         if (!el) return;
-        el.addEventListener('touchstart', e => { e.preventDefault(); touchDir=dir; });
-        el.addEventListener('touchend', () => touchDir=0);
-        el.addEventListener('mousedown', () => touchDir=dir);
-        el.addEventListener('mouseup', () => touchDir=0);
+        el.addEventListener('touchstart', function(e) { e.preventDefault(); touchDir = dir; }, { passive: false });
+        el.addEventListener('touchend', function() { touchDir = 0; });
+        el.addEventListener('touchcancel', function() { touchDir = 0; });
+        el.addEventListener('mousedown', function() { touchDir = dir; });
+        el.addEventListener('mouseup', function() { touchDir = 0; });
+        el.addEventListener('mouseleave', function() { touchDir = 0; });
     }
     bindTouch(ctrlL, -1);
     bindTouch(ctrlR, 1);
 
+    // --- Canvas touch/mouse for desktop and mobile ---
+    var canvasTouchId = null;
+    canvas.addEventListener('touchstart', function(e) {
+        if (!running) return;
+        e.preventDefault();
+        var t = e.touches[0];
+        var rect = canvas.getBoundingClientRect();
+        var cx = (t.clientX - rect.left) / rect.width * W;
+        touchDir = cx < W / 2 ? -1 : 1;
+        canvasTouchId = t.identifier;
+    }, { passive: false });
+    canvas.addEventListener('touchmove', function(e) {
+        if (!running) return;
+        for (var i = 0; i < e.touches.length; i++) {
+            if (e.touches[i].identifier === canvasTouchId) {
+                var rect = canvas.getBoundingClientRect();
+                var cx = (e.touches[i].clientX - rect.left) / rect.width * W;
+                touchDir = cx < W / 2 ? -1 : 1;
+            }
+        }
+    }, { passive: true });
+    canvas.addEventListener('touchend', function(e) {
+        for (var i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === canvasTouchId) {
+                touchDir = 0;
+                canvasTouchId = null;
+            }
+        }
+    });
+
     // --- Screen shake ---
     function shake(intensity, dur) { shakeDur = dur; shakeX = (Math.random()-0.5)*intensity; shakeY = (Math.random()-0.5)*intensity; }
 
-    // --- Update ---
+    // --- Update (fixed timestep) ---
     function update() {
         frame++;
 
-        // Movement with smooth acceleration
-        let targetDx = 0;
-        if (keys['ArrowLeft']||keys['a']) targetDx = -jimmy.speed;
-        if (keys['ArrowRight']||keys['d']) targetDx = jimmy.speed;
+        // Movement — responsive but smooth
+        var targetDx = 0;
+        if (keys['ArrowLeft'] || keys['a']) targetDx = -jimmy.speed;
+        if (keys['ArrowRight'] || keys['d']) targetDx = jimmy.speed;
         if (touchDir) targetDx = touchDir * jimmy.speed;
-        jimmy.vx += (targetDx - jimmy.vx) * 0.15;
+        jimmy.vx += (targetDx - jimmy.vx) * 0.18;
+        if (Math.abs(jimmy.vx) < 0.05) jimmy.vx = 0;
         jimmy.x += jimmy.vx;
         if (jimmy.x < 0) { jimmy.x = 0; jimmy.vx = 0; }
         if (jimmy.x + jimmy.w > W) { jimmy.x = W - jimmy.w; jimmy.vx = 0; }
 
         // Combo decay
         if (comboTimer > 0) comboTimer--;
-        if (comboTimer <= 0 && combo > 0) { combo = 0; comboEl.textContent = 'x1'; }
+        if (comboTimer <= 0 && combo > 0) { combo = 0; if (comboEl) comboEl.textContent = 'x1'; }
 
         // Magnet timer
         if (magnetActive) {
@@ -534,78 +606,79 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
             shakeX *= 0.85; shakeY *= 0.85;
         } else { shakeX = 0; shakeY = 0; }
 
-        // Spawn
-        spawnTimer++;
-        const rate = Math.max(24, spawnRate - frame * 0.005);
-        if (spawnTimer >= rate) { spawnItem(); spawnTimer = 0; }
+        // Spawn — time-based, not frame-based
+        var elapsed = GAME_TIME - timeLeft;
+        var spawnInterval = Math.max(28, 55 - elapsed * 0.5);
+        spawnAccum++;
+        if (spawnAccum >= spawnInterval) { spawnItem(); spawnAccum = 0; }
 
         // Magnet pull
         if (magnetActive) {
-            const jcx = jimmy.x + jimmy.w/2;
-            const jcy = jimmy.y + 40;
-            items.forEach(it => {
-                if (it.type === 'berry' || it.type === 'golden') {
-                    const dx = jcx - it.x, dy = jcy - it.y;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    if (dist < 150) {
-                        it.x += dx * 0.06;
-                        it.y += dy * 0.04;
+            var jcx = jimmy.x + jimmy.w/2;
+            var jcy = jimmy.y + 40;
+            for (var mi = 0; mi < items.length; mi++) {
+                var mit = items[mi];
+                if (mit.type === 'berry' || mit.type === 'golden') {
+                    var dx = jcx - mit.x, dy = jcy - mit.y;
+                    var dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 140 && dist > 0) {
+                        mit.x += dx / dist * 2.5;
+                        mit.y += dy / dist * 1.8;
                     }
                 }
-            });
+            }
         }
 
-        // Items
-        for (let i = items.length - 1; i >= 0; i--) {
-            const it = items[i];
+        // Items update
+        for (var i = items.length - 1; i >= 0; i--) {
+            var it = items[i];
             it.y += it.speed;
             it.wobble += it.ws;
-            it.x += Math.sin(it.wobble) * 0.4;
+            it.x += Math.sin(it.wobble) * 0.3;
 
             if (collides(it)) {
                 if (it.type === 'berry') {
                     combo++; comboTimer = 60;
                     if (combo > maxCombo) maxCombo = combo;
-                    const pts = Math.min(combo, 5);
+                    var pts = Math.min(combo, 5);
                     score += pts;
                     addFloatText(it.x, it.y, '+' + pts, '#f87171');
-                    burst(it.x, it.y, '#dc2626', 4, 2);
+                    burst(it.x, it.y, '#dc2626', 3, 1.5);
                     sfxCollect();
                     if (combo > 1 && combo % 5 === 0) sfxCombo();
                 } else if (it.type === 'golden') {
                     combo += 2; comboTimer = 90;
                     if (combo > maxCombo) maxCombo = combo;
-                    const pts = Math.min(combo, 8) * 2;
-                    score += pts;
-                    addFloatText(it.x, it.y, '+' + pts + ' GOLD!', '#fbbf24');
-                    burst(it.x, it.y, '#fbbf24', 6, 3);
-                    shake(4, 8);
+                    var pts2 = Math.min(combo, 8) * 2;
+                    score += pts2;
+                    addFloatText(it.x, it.y, '+' + pts2 + ' GOLD!', '#fbbf24');
+                    burst(it.x, it.y, '#fbbf24', 4, 2);
+                    shake(3, 6);
                     sfxGold();
                 } else if (it.type === 'rotten') {
-                    const loss = Math.max(3, Math.floor(score * 0.1));
+                    var loss = Math.max(2, Math.floor(score * 0.08));
                     score = Math.max(0, score - loss);
                     combo = 0; comboTimer = 0;
                     addFloatText(it.x, it.y, '-' + loss, '#6b7280');
-                    burst(it.x, it.y, '#6b7280', 4, 2);
-                    shake(6, 12);
+                    burst(it.x, it.y, '#6b7280', 3, 1.5);
+                    shake(4, 8);
                     sfxRotten();
                 } else if (it.type === 'magnet') {
                     magnetActive = true;
                     magnetTimer = 300;
                     addFloatText(it.x, it.y, 'MAGNET!', '#c4b5fd');
-                    burst(it.x, it.y, '#8b5cf6', 6, 3);
-                    shake(3, 6);
+                    burst(it.x, it.y, '#8b5cf6', 4, 2);
+                    shake(2, 4);
                     sfxMagnet();
                 }
                 items.splice(i, 1);
-                scoreEl.textContent = score;
-                comboEl.textContent = 'x' + Math.max(1, Math.min(combo, 5));
+                if (scoreEl) scoreEl.textContent = score;
+                if (comboEl) comboEl.textContent = 'x' + Math.max(1, Math.min(combo, 5));
                 continue;
             }
 
-            // Missed good berry = break combo
             if (it.y > H + 20) {
-                if (it.type === 'berry') { combo = 0; comboTimer = 0; comboEl.textContent = 'x1'; }
+                if (it.type === 'berry') { combo = 0; comboTimer = 0; if (comboEl) comboEl.textContent = 'x1'; }
                 items.splice(i, 1);
             }
         }
@@ -616,91 +689,105 @@ console.log('%c OKYANKI ', 'background:#C67B5C;color:#fff;font-size:24px;font-we
         ctx.translate(shakeX, shakeY);
         drawBg();
         drawParticles();
-        items.forEach(drawItem);
+        for (var i = 0; i < items.length; i++) drawItem(items[i]);
         drawJimmy();
         drawFloatTexts();
 
         // Magnet timer bar
         if (magnetActive) {
-            const pct = magnetTimer / 300;
-            ctx.fillStyle = 'rgba(139,92,246,0.3)';
-            ctx.fillRect(0, H-4, W, 4);
+            var pct = magnetTimer / 300;
+            ctx.fillStyle = 'rgba(139,92,246,0.25)';
+            ctx.fillRect(0, H-3, W, 3);
             ctx.fillStyle = '#8b5cf6';
-            ctx.fillRect(0, H-4, W*pct, 4);
+            ctx.fillRect(0, H-3, W*pct, 3);
         }
 
-        // Timer warning flash
+        // Timer warning
         if (timeLeft <= 10 && timeLeft > 0 && frame % 30 < 15) {
-            ctx.fillStyle = 'rgba(220,38,38,0.05)';
+            ctx.fillStyle = 'rgba(220,38,38,0.04)';
             ctx.fillRect(0, 0, W, H);
         }
 
         ctx.restore();
     }
 
-    function loop() {
+    // --- Game loop: fixed timestep to prevent speed variance ---
+    function loop(timestamp) {
         if (!running) return;
-        update(); draw();
+        if (!lastTime) lastTime = timestamp;
+
+        var delta = timestamp - lastTime;
+        // Clamp delta to avoid spiral of death on tab switch
+        if (delta > 200) delta = FRAME_MS;
+        lastTime = timestamp;
+
+        // Fixed-step update
+        spawnAccum += 0; // keep accumulator in update()
+        update();
+        draw();
+
         animFrame = requestAnimationFrame(loop);
     }
 
     function startGame() {
         initAudio();
-        score = 0; timeLeft = GAME_TIME; spawnRate = 50; spawnTimer = 0; frame = 0;
+        score = 0; timeLeft = GAME_TIME; spawnAccum = 0; frame = 0;
         combo = 0; maxCombo = 0; comboTimer = 0;
         magnetActive = false; magnetTimer = 0;
         items = []; particles = []; floatTexts = [];
         jimmy.x = W/2 - 28; jimmy.vx = 0;
-        scoreEl.textContent = '0';
-        comboEl.textContent = 'x1';
-        timerEl.textContent = GAME_TIME;
+        lastTime = 0;
+        if (scoreEl) scoreEl.textContent = '0';
+        if (comboEl) comboEl.textContent = 'x1';
+        if (timerEl) timerEl.textContent = GAME_TIME;
         overScreen.classList.remove('show');
         startScreen.classList.add('hidden');
         running = true;
 
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            timerEl.textContent = timeLeft;
-            if (timeLeft <= 0) endGame();
-        }, 1000);
-        loop();
+        // Timer based on real clock, not setInterval drift
+        timerStart = Date.now();
+        var timerCheck = setInterval(function() {
+            if (!running) { clearInterval(timerCheck); return; }
+            var elapsed = Math.floor((Date.now() - timerStart) / 1000);
+            timeLeft = Math.max(0, GAME_TIME - elapsed);
+            if (timerEl) timerEl.textContent = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerCheck);
+                endGame();
+            }
+        }, 250); // Check 4x/sec for accuracy
+
+        animFrame = requestAnimationFrame(loop);
     }
 
     function endGame() {
         running = false;
-        clearInterval(timerInterval);
         cancelAnimationFrame(animFrame);
         sfxEnd();
 
-        const isNew = score > bestScore;
+        var isNew = score > bestScore;
         if (isNew) {
             bestScore = score;
-            localStorage.setItem('jimmyBest2', String(bestScore));
-            bestEl.textContent = bestScore;
+            localStorage.setItem('jimmyBest3', String(bestScore));
+            if (bestEl) bestEl.textContent = bestScore;
         }
 
-        // Stars (1-3)
-        const stars = score >= 60 ? 3 : score >= 30 ? 2 : score >= 10 ? 1 : 0;
-        goStars.textContent = (stars >= 1 ? '\u2B50' : '\u2606') + (stars >= 2 ? '\u2B50' : '\u2606') + (stars >= 3 ? '\u2B50' : '\u2606');
+        var stars = score >= 60 ? 3 : score >= 30 ? 2 : score >= 10 ? 1 : 0;
+        if (goStars) goStars.textContent = (stars >= 1 ? '\u2B50' : '\u2606') + (stars >= 2 ? '\u2B50' : '\u2606') + (stars >= 3 ? '\u2B50' : '\u2606');
+        if (goTitle) goTitle.textContent = isNew ? 'New Record!' : "Time's Up!";
+        if (finalEl) finalEl.textContent = score;
 
-        goTitle.textContent = isNew ? 'New Record!' : 'Time\'s Up!';
-        finalEl.textContent = score;
-
-        const msgs = [
-            score < 10 ? 'Jimmy needs more practice!' : '',
-            score >= 10 && score < 30 ? 'Not bad! Keep going!' : '',
-            score >= 30 && score < 60 ? 'Great job! Jimmy is impressed!' : '',
-            score >= 60 ? 'Legendary! Strawberry King!' : '',
-        ].filter(Boolean);
-        goMsg.textContent = msgs[0] + (maxCombo > 3 ? ' (Max combo: x' + maxCombo + ')' : '');
-
+        var msg = score < 10 ? 'Jimmy needs more practice!' :
+                  score < 30 ? 'Not bad! Keep going!' :
+                  score < 60 ? 'Great job! Jimmy is impressed!' :
+                  'Legendary! Strawberry King!';
+        if (goMsg) goMsg.textContent = msg + (maxCombo > 3 ? ' (Max combo: x' + maxCombo + ')' : '');
         overScreen.classList.add('show');
     }
 
-    // Initial draw
-    drawBg();
-    drawJimmy();
+    // Initial static draw
+    try { drawBg(); drawJimmy(); } catch(e) { /* safe fallback */ }
 
-    startBtn.addEventListener('click', startGame);
-    restartBtn.addEventListener('click', startGame);
+    if (startBtn) startBtn.addEventListener('click', startGame);
+    if (restartBtn) restartBtn.addEventListener('click', startGame);
 })();
